@@ -46,8 +46,7 @@ class Gail(nn.Module) :
         advs = []
         rets = []
         cost = []
-        pi = PolicyNet(OBSERVATION_LEN,len(ACTION))
-        pi.eval()
+        self.pi.eval()
         step = 0
         while step < num_iters :
             ep_obs = []
@@ -58,11 +57,9 @@ class Gail(nn.Module) :
             done = False
             observation,_ = env.reset()
             t=0
-            step
-
             while not done and step<num_iters:
                 observation = np.float32(observation)
-                action = pi(observation).sample().numpy()
+                action = self.pi(observation).sample().numpy()
                 ep_obs.append(observation)
                 obs.append(observation)
                 ep_act.append(action)
@@ -82,29 +79,38 @@ class Gail(nn.Module) :
             ep_act = torch.FloatTensor(np.array(ep_act))
             ep_gamma = torch.FloatTensor(ep_gamma)
             ep_lambda = torch.FloatTensor(ep_lambda)
-            ep_costs = (-1)*torch.log(self.discriminator(ep_obs,ep_act)).squeeze().detach()
+            ep_costs = (-1)*torch.log(self.discriminator(ep_obs,ep_act) + 1e-8).squeeze().detach() 
+            cost.append(ep_costs)
             ep_disc_cost = ep_gamma*ep_costs
-            cost.append(ep_disc_cost)
-            ep_disc_rets = torch.FloatTensor([sum(ep_disc_cost[i:]) for i in range(t)])
+            ep_disc_rets = (-1)*torch.FloatTensor([sum(ep_disc_cost[i:]) for i in range(t)])
             ep_rets = ep_disc_rets / ep_gamma
 
             rets.append(ep_rets)
 
             self.value.eval()
-            ep_curr_val = self.value(ep_obs)
-            ep_advs = ep_disc_cost.sum() - ep_curr_val
+            ep_curr_vals = self.value(ep_obs).detach()
+            ep_advs = ep_disc_cost.sum() - ep_curr_vals
+            #ep_next_vals = torch.cat((self.value(ep_obs)[1:], torch.FloatTensor([[0.]]))).detach()
+            #ep_deltas = (-1)*ep_costs.unsqueeze(-1) + gamma * ep_next_vals - ep_curr_vals
+
+            #ep_advs = torch.FloatTensor([((ep_gamma * ep_lambda)[:t - j].unsqueeze(-1) * ep_deltas[j:]).sum()for j in range(t)])
             advs.append(ep_advs)
+            
             gam.append(ep_gamma)
             lmd.append(ep_lambda)
 
-        print('Episode cost = ',np.mean(cost))
         obs = torch.FloatTensor(np.array(obs))
         act = torch.FloatTensor(np.array(act))
+        cost = torch.cat(cost)
+        print('Episode Cost = {}'.format(cost.mean()))
         advs = torch.cat(advs)
+        print('Episode Advantages = {}'.format(advs.mean()))
         gam = torch.cat(gam)
         lmd = torch.cat(lmd)
         rets = torch.cat(rets)
-        advs = (advs - advs.mean())/advs.std()
+        advs = (advs - advs.mean())/(advs.std() + 1e-3)
+        obs = (obs - obs.mean())/(obs.std() + 1e-3)
+        act = (act - act.mean())/(act.std() + 1e-3)
 
         return obs, act, advs, gam, lmd, rets
 
@@ -159,10 +165,9 @@ class Gail(nn.Module) :
 
         for _ in range(max_iter):
             new_params = old_params + beta * s
-
             self.setParams(pi, new_params)
             kld_new = self.kld(obs, old_distb).detach()
-
+        
             L_new = L().detach()
 
             actual_improv = L_new - L_old
@@ -174,22 +179,21 @@ class Gail(nn.Module) :
 
             beta *= 0.5
 
-        print("The line search was failed!")
+        print("The line search failed! Returning old parameters")
         return old_params
     
     
     def valueConstraint(self, old_v, obs) :
         return torch.mean((old_v - self.value(obs))**2)
     
-    
+
     def kld(self, obs, old_distb):
         distb = self.pi(obs)
         old_mean = old_distb.mean.detach()
         old_cov = old_distb.covariance_matrix.sum(-1).detach()
         mean = distb.mean
         cov = distb.covariance_matrix.sum(-1)
-
-        return (0.5) * ((old_cov / cov).sum(-1)+ (((old_mean - mean) ** 2) / cov).sum(-1)- self.action_dims+ torch.log(cov).sum(-1)
+        return (0.5) * ((old_cov / cov).sum(-1)+ (((old_mean - mean) ** 2) / cov).sum(-1) - self.action_dims+ torch.log(cov).sum(-1)
                 - torch.log(old_cov).sum(-1)
             ).mean()
 
@@ -203,17 +207,23 @@ class Gail(nn.Module) :
 
             return hessian + cg_damping * v
 
-    def train(self, env, num_iters, trpo_eps, max_kl, cg_damping,lambda_) :
-        opt_d = torch.optim.Adam(self.discriminator.parameters())
+    def train(self, env, num_iters, trpo_eps, max_kl, cg_damping, lambda_) :
+        opt_d = torch.optim.Adam(self.discriminator.parameters(), lr=3e-3)
         exp_obs, exp_act = self.rolloutExpert(env)
+        print("Expert  ", exp_obs.shape, exp_act.shape)
         for i in range(num_iters) :
+            
+            obs, act, advs, gamma, lmd, rets = self.rolloutPolicy(env, 0.995, 0.999, None, env.max_steps)
+            print("Agent  ", obs.shape,act.shape)
             print('Episode {}'.format(i))
-            obs, act, advs, gamma, lmd, rets = self.rolloutPolicy(env, 0.99, 0.99, None, env.max_steps)
             exp_score = self.discriminator(exp_obs, exp_act)
             so_score = self.discriminator(obs,act)
+            print('Episode agent confidence = {}'.format(so_score.mean()))
+            print('Episode expert confidence = {}'.format(exp_score.mean()))
+            print('Episode returns = {}'.format(rets.mean()))
             opt_d.zero_grad()
             loss_d_exp = torch.nn.functional.binary_cross_entropy_with_logits(exp_score, torch.zeros_like(exp_score))
-            loss_d_so = torch.nn.functional.binary_cross_entropy_with_logits(so_score, torch.zeros_like(so_score))
+            loss_d_so = torch.nn.functional.binary_cross_entropy_with_logits(so_score, torch.ones_like(so_score))
             loss = loss_d_exp + loss_d_so
             loss.backward()
       
@@ -221,50 +231,51 @@ class Gail(nn.Module) :
             print('----------------------------------------------------------')
             
             opt_d.step()
-            self.value.train()
-            old_params = self.getParams(self.value).detach()
-            old_v = self.value(obs).detach()
 
-            grad_diff = self.getGrads(self.valueConstraint(old_v,obs), self.value)
+            if i%5 == 0 :
+                self.value.train()
+                old_params = self.getParams(self.value).detach()
+                old_v = self.value(obs).detach()
 
-            
-            g = self.getGrads(((-1) * (self.value(obs).squeeze() - rets) ** 2).mean(), self.value).detach()
-            s = self.conjugateGradient(self.valueHessian, g, grad_diff).detach()
+                grad_diff = self.getGrads(self.valueConstraint(old_v,obs), self.value)
 
-            Hs = self.valueHessian(s, grad_diff).detach()
-            alpha = torch.sqrt(2 * trpo_eps / torch.dot(s, Hs))
+                
+                g = self.getGrads(((-1) * (self.value(obs).squeeze() - rets) ** 2).mean(), self.value).detach()
+                s = self.conjugateGradient(self.valueHessian, g, grad_diff).detach()
 
-            new_params = old_params + alpha * s
+                Hs = self.valueHessian(s, grad_diff).detach()
+                alpha = torch.sqrt(2 * trpo_eps / torch.dot(s, Hs))
 
-            self.setParams(self.value, new_params)
+                new_params = old_params + alpha * s
 
-            self.pi.train()
-            old_params = self.getParams(self.pi).detach()
-            old_distb = self.pi(obs)
+                self.setParams(self.value, new_params)
 
-            def L():
-                distb = self.pi(obs)
+                self.pi.train()
+                old_params = self.getParams(self.pi).detach()
+                if torch.isnan(obs).any() or torch.isinf(obs).any():
+                    print("NaN or Inf in obs")
+                old_distb = self.pi(obs)
 
-                return (advs * torch.exp(distb.log_prob(act)- old_distb.log_prob(act).detach())).mean()
+                def L():
+                    distb = self.pi(obs)
 
-            
+                    return (advs * torch.exp(distb.log_prob(act)- old_distb.log_prob(act).detach())).mean()
 
-            grad_kld_old_param = self.getGrads(self.kld(obs, old_distb), self.pi)
+                
+                grad_kld_old_param = self.getGrads(self.kld(obs, old_distb), self.pi)
 
-            
+                g = self.getGrads(L(), self.pi).detach()
 
-            g = self.getGrads(L(), self.pi).detach()
+                s = self.conjugateGradient(self.policyHessian, g, grad_kld_old_param, cg_damping=cg_damping).detach()
+                Hs = self.policyHessian(s, grad_kld_old_param, cg_damping).detach()
 
-            s = self.conjugateGradient(self.policyHessian, g, grad_kld_old_param, cg_damping=cg_damping).detach()
-            Hs = self.policyHessian(s, grad_kld_old_param, cg_damping).detach()
+                new_params = self.rescale_and_linesearch(g, s, Hs, max_kl,L , obs, old_distb, old_params, self.pi)
 
-            new_params = self.rescale_and_linesearch(g, s, Hs, max_kl,L , obs, old_distb, old_params, self.pi)
+                disc_causal_entropy = ((-1) * gamma * self.pi(obs).log_prob(act)).mean()
+                grad_disc_causal_entropy = self.getGrads(disc_causal_entropy, self.pi)
+                new_params += lambda_ * grad_disc_causal_entropy
 
-            disc_causal_entropy = ((-1) * gamma * self.pi(obs).log_prob(act)).mean()
-            grad_disc_causal_entropy = self.getGrads(disc_causal_entropy, self.pi)
-            new_params += lambda_ * grad_disc_causal_entropy
-
-            self.setParams(self.pi, new_params)
+                self.setParams(self.pi, new_params)
 
         return None
 
@@ -273,11 +284,15 @@ class Gail(nn.Module) :
 if __name__ == '__main__' :
    env = PatientSim(model_path=MODEL_PATH, visualize=False, motion_paths=MOTION_PATHS)
    gail = Gail(OBSERVATION_LEN,len(ACTION))
+   #gail.discriminator.load_state_dict(torch.load(os.path.join(PATH, 'discriminator.ckpt')))
+   #gail.pi.policy.load_state_dict(torch.load(os.path.join(PATH,'policy.ckpt')))
+   #gail.value.load_state_dict(torch.load(os.path.join(PATH,'value.ckpt')))
    trpo_eps = 0.01
    max_kl = 0.01
    cg_damping = 0.1
-   lambda_ = 1e-3
-   gail.train(env,1000, trpo_eps, max_kl, cg_damping, lambda_ )
+   lambda_ = 1e-2
+   gail.train(env,500, trpo_eps, max_kl, cg_damping, lambda_ )
+   print('Training Complete!!')
    torch.save(gail.pi.state_dict(), os.path.join("policy.ckpt"))
    torch.save(gail.value.state_dict(), os.path.join( "value.ckpt"))
    torch.save(gail.discriminator.state_dict(), os.path.join("discriminator.ckpt"))
