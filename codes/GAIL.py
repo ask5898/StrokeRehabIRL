@@ -1,3 +1,4 @@
+
 from create_environment import PatientSim, ACTION, OBSERVATION_LEN
 from Networks import PolicyNet,ValueNet,Discriminator
 import torch
@@ -205,6 +206,4 @@ if __name__ == '__main__' :
    torch.save(gail.pi.state_dict(), os.path.join("policy.ckpt"))
    torch.save(gail.value.state_dict(), os.path.join( "value.ckpt"))
    torch.save(gail.discriminator.state_dict(), os.path.join("discriminator.ckpt"))
-
-
 

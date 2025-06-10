@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <QTM_Body_File_Ver_1.00>
     <Body>
         <Name>upperArm</Name>
@@ -104,3 +105,111 @@
         <Data_orientation R11="1.000000" R12="0.000000" R13="0.000000" R21="0.000000" R22="1.000000" R23="0.000000" R31="0.000000" R32="0.000000" R33="1.000000" Relative_body="1">0</Data_orientation>
     </Body>
 </QTM_Body_File_Ver_1.00>
+=======
+<QTM_Body_File_Ver_1.00>
+    <Body>
+        <Name>upperArm</Name>
+        <Color R="255" G="0" B="0"/>
+        <MaximumResidual>10.000000</MaximumResidual>
+        <MinimumMarkersInBody>3</MinimumMarkersInBody>
+        <BoneLengthTolerance>5.000000</BoneLengthTolerance>
+        <Points>
+            <Point X="14.147941" Y="24.708988" Z="20.388490" Virtual="0" Name="U2"/>
+            <Point X="-3.341975" Y="-68.074987" Z="20.132107" Virtual="0" Name="U4"/>
+            <Point X="62.512611" Y="26.928609" Z="-37.487368" Virtual="0" Name="U1"/>
+            <Point X="-73.318578" Y="16.437389" Z="-3.033229" Virtual="0" Name="U3"/>
+        </Points>
+        <Data_origin X="0.000000" Y="0.000000" Z="0.000000" Relative_body="4">1</Data_origin>
+        <Data_orientation R11="1.000000" R12="0.000000" R13="0.000000" R21="0.000000" R22="1.000000" R23="0.000000" R31="0.000000" R32="0.000000" R33="1.000000" Relative_body="4">1</Data_orientation>
+    </Body>
+    <Body>
+        <Name>lowerArm</Name>
+        <Color R="0" G="255" B="0"/>
+        <MaximumResidual>10.000000</MaximumResidual>
+        <MinimumMarkersInBody>3</MinimumMarkersInBody>
+        <BoneLengthTolerance>5.000000</BoneLengthTolerance>
+        <Points>
+            <Point X="16.689050" Y="-6.204738" Z="-7.628849" Virtual="0" Name="L2"/>
+            <Point X="0.683962" Y="-73.121855" Z="-13.394534" Virtual="0" Name="L3"/>
+            <Point X="-17.373012" Y="79.326592" Z="21.023384" Virtual="0" Name="L1"/>
+            <Point X="-65.163462" Y="-23.415317" Z="-30.984196" Virtual="0" Name="L4"/>
+            <Point X="-39.116240" Y="95.178375" Z="-59.500835" Virtual="1" Name="elbow"/>
+        </Points>
+        <Data_origin X="0.000000" Y="0.000000" Z="0.000000" Relative_body="1">1</Data_origin>
+        <Data_orientation R11="1.000000" R12="0.000000" R13="0.000000" R21="0.000000" R22="1.000000" R23="0.000000" R31="0.000000" R32="0.000000" R33="1.000000" Relative_body="1">1</Data_orientation>
+    </Body>
+    <Body>
+        <Name>prosup</Name>
+        <Color R="0" G="0" B="255"/>
+        <MaximumResidual>10.000000</MaximumResidual>
+        <MinimumMarkersInBody>3</MinimumMarkersInBody>
+        <BoneLengthTolerance>5.000000</BoneLengthTolerance>
+        <Points>
+            <Point X="1.957596" Y="-57.312904" Z="10.908045" Virtual="0" Name="prosup4"/>
+            <Point X="5.876528" Y="3.019258" Z="-0.929528" Virtual="0" Name="prosup1"/>
+            <Point X="-10.759205" Y="27.456729" Z="36.091814" Virtual="0" Name="prosup2"/>
+            <Point X="2.925081" Y="26.836917" Z="-46.070331" Virtual="0" Name="prosup3"/>
+            <Point X="32.890000" Y="-134.140000" Z="64.660000" Virtual="1" Name="end_eff"/>
+        </Points>
+        <Data_origin X="0.000000" Y="0.000000" Z="0.000000" Relative_body="2">1</Data_origin>
+        <Data_orientation R11="1.000000" R12="0.000000" R13="0.000000" R21="0.000000" R22="1.000000" R23="0.000000" R31="0.000000" R32="0.000000" R33="1.000000" Relative_body="2">1</Data_orientation>
+    </Body>
+    <Body>
+        <Name>sternum</Name>
+        <Color R="255" G="0" B="192"/>
+        <MaximumResidual>10.000000</MaximumResidual>
+        <MinimumMarkersInBody>3</MinimumMarkersInBody>
+        <BoneLengthTolerance>10.000000</BoneLengthTolerance>
+        <Points>
+            <Point X="-2.854538" Y="-18.133836" Z="-56.238200" Virtual="0" Name="stn3"/>
+            <Point X="-2.328747" Y="26.879749" Z="-8.955382" Virtual="0" Name="stn1"/>
+            <Point X="5.183285" Y="-8.745913" Z="65.193582" Virtual="0" Name="stn2"/>
+        </Points>
+        <Data_origin X="0.000000" Y="0.000000" Z="0.000000" Relative_body="1">0</Data_origin>
+        <Data_orientation R11="1.000000" R12="0.000000" R13="0.000000" R21="0.000000" R22="1.000000" R23="0.000000" R31="0.000000" R32="0.000000" R33="1.000000" Relative_body="1">0</Data_orientation>
+    </Body>
+    <Body>
+        <Name>Head</Name>
+        <Color R="255" G="255" B="0"/>
+        <MaximumResidual>10.000000</MaximumResidual>
+        <MinimumMarkersInBody>3</MinimumMarkersInBody>
+        <BoneLengthTolerance>5.000000</BoneLengthTolerance>
+        <Points>
+            <Point X="56.639489" Y="14.537431" Z="-43.230005" Virtual="0" Name="Head - 1"/>
+            <Point X="52.764293" Y="23.673446" Z="84.472127" Virtual="0" Name="Head - 2"/>
+            <Point X="-109.403782" Y="-38.210877" Z="-41.242122" Virtual="0" Name="Head - 3"/>
+        </Points>
+        <Data_origin X="0.000000" Y="0.000000" Z="0.000000" Relative_body="1">0</Data_origin>
+        <Data_orientation R11="1.000000" R12="0.000000" R13="0.000000" R21="0.000000" R22="1.000000" R23="0.000000" R31="0.000000" R32="0.000000" R33="1.000000" Relative_body="1">0</Data_orientation>
+    </Body>
+    <Body>
+        <Name>back</Name>
+        <Color R="127" G="0" B="127"/>
+        <MaximumResidual>10.000000</MaximumResidual>
+        <MinimumMarkersInBody>3</MinimumMarkersInBody>
+        <BoneLengthTolerance>5.000000</BoneLengthTolerance>
+        <Points>
+            <Point X="171.606869" Y="-118.808966" Z="-55.667950" Virtual="0" Name="stn1"/>
+            <Point X="-6.768741" Y="40.082254" Z="114.944861" Virtual="0" Name="back - 2"/>
+            <Point X="-67.938355" Y="63.396135" Z="-75.700608" Virtual="0" Name="back - 3"/>
+            <Point X="-96.899772" Y="15.330577" Z="16.423696" Virtual="0" Name="back - 4"/>
+        </Points>
+        <Data_origin X="0.000000" Y="0.000000" Z="0.000000" Relative_body="1">0</Data_origin>
+        <Data_orientation R11="1.000000" R12="0.000000" R13="0.000000" R21="0.000000" R22="1.000000" R23="0.000000" R31="0.000000" R32="0.000000" R33="1.000000" Relative_body="1">0</Data_orientation>
+    </Body>
+    <Body>
+        <Name>stn2</Name>
+        <Color R="127" G="127" B="0"/>
+        <MaximumResidual>10.000000</MaximumResidual>
+        <MinimumMarkersInBody>3</MinimumMarkersInBody>
+        <BoneLengthTolerance>6.000000</BoneLengthTolerance>
+        <Points>
+            <Point X="-7.501024" Y="-14.862260" Z="-56.908844" Virtual="0" Name="stn3"/>
+            <Point X="-1.203735" Y="26.345808" Z="-7.965041" Virtual="0" Name="stn1"/>
+            <Point X="8.704758" Y="-11.483548" Z="64.873885" Virtual="0" Name="stn2"/>
+        </Points>
+        <Data_origin X="0.000000" Y="0.000000" Z="0.000000" Relative_body="1">0</Data_origin>
+        <Data_orientation R11="1.000000" R12="0.000000" R13="0.000000" R21="0.000000" R22="1.000000" R23="0.000000" R31="0.000000" R32="0.000000" R33="1.000000" Relative_body="1">0</Data_orientation>
+    </Body>
+</QTM_Body_File_Ver_1.00>
+>>>>>>> b484167ee99f361d440f90ff1ebde7caec42fe7e
